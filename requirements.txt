@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+starsessions
+aerospike
+python-multipart

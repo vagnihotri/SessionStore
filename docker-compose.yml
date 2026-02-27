@@ -1,0 +1,30 @@
+services:
+  aerospike:
+    image: aerospike:ce-8.1.1.1
+    container_name: aerospike
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+      - "3002:3002"
+    volumes:
+      - aerospike_data:/opt/aerospike/data
+    healthcheck:
+      test: ["CMD", "asinfo", "-v", "status"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+
+  fastapi:
+    build: .
+    container_name: fastapi_app
+    ports:
+      - "8001:8001"
+    environment:
+      - AEROSPIKE_HOST=aerospike
+      - AEROSPIKE_PORT=3000
+    depends_on:
+      aerospike:
+        condition: service_healthy
+
+volumes:
+  aerospike_data:
