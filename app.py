@@ -8,8 +8,9 @@ Run:
 import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Form, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi import FastAPI, Form, HTTPException, Request
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from pydantic import BaseModel
 from starlette.middleware import Middleware
 from starsessions import SessionAutoloadMiddleware, SessionMiddleware
 
@@ -127,7 +128,9 @@ async def login_page(request: Request, error: str = ""):
 @app.post("/login")
 async def login(request: Request, username: str = Form(), password: str = Form()):
     if USERS_DB.get(username) == password:
+        result = store.create_user_session(username)
         request.session["username"] = username
+        request.session["aerospike_session_id"] = result["session_id"]
         return RedirectResponse("/", status_code=302)
     return RedirectResponse("/login?error=Invalid+credentials", status_code=302)
 
@@ -136,3 +139,29 @@ async def login(request: Request, username: str = Form(), password: str = Form()
 async def logout(request: Request):
     request.session.clear()
     return RedirectResponse("/login", status_code=302)
+
+
+# --- Session APIs ---
+
+class CreateSessionRequest(BaseModel):
+    username: str
+
+
+@app.post("/api/sessions")
+async def create_session(body: CreateSessionRequest):
+    """Create a session for a user in Aerospike.
+
+    Invalidates any previous session for the same user.
+    Used internally by the login flow.
+    """
+    result = store.create_user_session(body.username)
+    return JSONResponse(result, status_code=201)
+
+
+@app.get("/api/sessions/{username}")
+async def get_session(username: str):
+    """Fetch session information for a user from Aerospike."""
+    session = store.get_user_session(username)
+    if session is None:
+        raise HTTPException(status_code=404, detail=f"No active session for user '{username}'")
+    return session

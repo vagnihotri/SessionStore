@@ -3,3 +3,4 @@ uvicorn
 starsessions
 aerospike
 python-multipart
+pydantic
