@@ -851,10 +851,3 @@ fastapi_login_app/
 ├── .dockerignore            # Excludes __pycache__, .venv, .idea
 └── DOCUMENTATION.md        # This file
 ```
-
-### Related Projects
-
-| Project | Path | Description |
-|---|---|---|
-| Django Login App | `/Users/v.agnihotri/django_login_app/` | Django equivalent with its own Aerospike session backend (`aerospike_sessions/session.py` extending Django's `SessionBase`) |
-| Aerospike CRUD Script | `/Users/v.agnihotri/aerospike_crud/crud.py` | Standalone Python script demonstrating basic Aerospike CRUD operations |
